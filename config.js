@@ -4,14 +4,20 @@ const environments = {};
 environments.staging = {
   environmentName: 'staging',
   server: {
-    port: 3000
+    httpPort: 3000,
+    httpsPort: 3001,
+    sslKeyPath: './https/key.pem',
+    sslCertPath: './https/cert.pem',
   }
 };
 
 environments.production = {
   environmentName: 'production',
   server: {
-    port: 5000
+    httpPort: 5000,
+    httpsPort: 5001,
+    sslKeyPath: './https/key.pem',
+    sslCertPath: './https/cert.pem',
   }
 };
 

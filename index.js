@@ -3,67 +3,36 @@
  * Run it with `node index.js`.
  */
 
- // Import our dependencies
- const http = require('http');
- const url = require('url');
- const StringDecoder = require('string_decoder').StringDecoder;
- const config = require('./config');
+// Import our dependencies
+const http = require('http');
+const https = require('https');
+const url = require('url');
+const StringDecoder = require('string_decoder').StringDecoder;
+const config = require('./config');
+const fs = require('fs');
 
- // Configure a simple server to respond to test requests
- const server = http.createServer((request, response) => {
-   // Parse the request URL (including the query string)
-   const parsedUrl = url.parse(request.url, true);
+// Instantiate a HTTP server
+const httpServer = http.createServer((request, response) => {
+  restHandler(request, response);
+});
 
-   // Get the path and trim it
-   const path = parsedUrl.pathname;
-   const trimmedPath = path.replace(/^\/+|\/+$/g, '');
+// Start the HTTP Server
+httpServer.listen(config.server.httpPort, () => {
+  console.log('The HTTP server is up, listening on port ' + config.server.httpPort + '.');
+});
 
-   // Get the request method
-   const method = request.method.toLowerCase();
+// Instantiate a HTTPS server
+const httpsOptions = {
+  key: fs.readFileSync(config.server.sslKeyPath),
+  cert: fs.readFileSync(config.server.sslCertPath)
+};
+const httpsServer = https.createServer(httpsOptions, (request, response) => {
+  restHandler(request, response);
+});
 
-   // Get the headers
-   const headers = request.headers;
-
-   // Get query params
-   const queryParams = parsedUrl.query;
-
-   // Get the request payload (if any)
-   const decoder = new StringDecoder('utf-8');
-   let buffer = '';
-   request.on('data', (data) => {
-      buffer += decoder.write(data);
-   });
-
-   // When the full payload has been received ...
-   request.on('end', () => {
-     // Complete the buffer
-     buffer += decoder.end();
-
-    // Determine the appropriate request handler
-    const handler = typeof(handlers[trimmedPath]) !== 'undefined' ? handlers[trimmedPath] : handlers.notFound;
-
-    // Compose the data to pass to the handler
-    const data = {
-      'path' : trimmedPath,
-      'method': method,
-      'headers': headers,
-      'queryParams' : queryParams,
-      'payload': buffer
-    };
-
-    // Call the appropriate response handler
-    handler(data, (statusCode, payload) => {
-      if(typeof(statusCode) !== 'number') statusCode = 200;
-      if(typeof(payload) !== 'object') payload = {};
-
-      // Respond to the request
-      response.setHeader('Content-Type', 'application/json');
-      response.writeHead(statusCode);
-      response.end(JSON.stringify(payload));
-    });
-
-    console.log('Received ' + method.toUpperCase() + ' request on path: /' + trimmedPath);
-  });
+// Start the HTTPS Server
+httpsServer.listen(config.server.httpsPort, () => {
+  console.log('The HTTPS server is up, listening on port ' + config.server.httpsPort + '.');
 });
 
 // Define our request handlers
@@ -83,7 +52,59 @@ const router = {
   'test': handlers.test
 };
 
-// Start the server, listen on the configured port
-server.listen(config.server.port, () => {
-  console.log('The server is up, listening on port ' + config.server.port + '.');
-});
+// Configure how our server will respond to requests
+const restHandler = function (request, response) {
+  // Parse the request URL (including the query string)
+  const parsedUrl = url.parse(request.url, true);
+
+  // Get the path and trim it
+  const path = parsedUrl.pathname;
+  const trimmedPath = path.replace(/^\/+|\/+$/g, '');
+
+  // Get the request method
+  const method = request.method.toLowerCase();
+
+  // Get the headers
+  const headers = request.headers;
+
+  // Get query params
+  const queryParams = parsedUrl.query;
+
+  // Get the request payload (if any)
+  const decoder = new StringDecoder('utf-8');
+  let buffer = '';
+  request.on('data', (data) => {
+     buffer += decoder.write(data);
+  });
+
+  // When the full payload has been received ...
+  request.on('end', () => {
+    // Complete the buffer
+    buffer += decoder.end();
+
+   // Determine the appropriate request handler
+   const handler = typeof(handlers[trimmedPath]) !== 'undefined' ? handlers[trimmedPath] : handlers.notFound;
+
+   // Compose the data to pass to the handler
+   const data = {
+     'path' : trimmedPath,
+     'method': method,
+     'headers': headers,
+     'queryParams' : queryParams,
+     'payload': buffer
+   };
+
+   // Call the appropriate response handler
+   handler(data, (statusCode, payload) => {
+     if(typeof(statusCode) !== 'number') statusCode = 200;
+     if(typeof(payload) !== 'object') payload = {};
+
+     // Respond to the request
+     response.setHeader('Content-Type', 'application/json');
+     response.writeHead(statusCode);
+     response.end(JSON.stringify(payload));
+   });
+
+   console.log('Received ' + method.toUpperCase() + ' request on path: /' + trimmedPath);
+ });
+}
