@@ -7,13 +7,7 @@
  const http = require('http');
  const url = require('url');
  const StringDecoder = require('string_decoder').StringDecoder;
-
- // Set up some config variables
- const config = {
-   server: {
-     port: 3000
-   }
- }
+ const config = require('./config');
 
  // Configure a simple server to respond to test requests
  const server = http.createServer((request, response) => {
@@ -63,6 +57,7 @@
       if(typeof(payload) !== 'object') payload = {};
 
       // Respond to the request
+      response.setHeader('Content-Type', 'application/json');
       response.writeHead(statusCode);
       response.end(JSON.stringify(payload));
     });
