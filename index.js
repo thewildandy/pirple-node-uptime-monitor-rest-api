@@ -11,7 +11,7 @@ const StringDecoder = require('string_decoder').StringDecoder;
 const config = require('./config');
 const fs = require('fs');
 const handlers = require('./lib/handlers');
-const _data = require('./lib/data');
+const helpers = require('./lib/helpers');
 
 // Instantiate a HTTP server
 const httpServer = http.createServer((request, response) => {
@@ -41,6 +41,7 @@ httpsServer.listen(config.server.httpsPort, () => {
 const router = {
   'test': handlers.test,
   'ping': handlers.ping,
+  'users': handlers.users,
 };
 
 // Configure how our server will respond to requests
@@ -82,7 +83,7 @@ const restHandler = function (request, response) {
      'method': method,
      'headers': headers,
      'queryParams' : queryParams,
-     'payload': buffer
+     'payload': helpers.parse(buffer),
    };
 
    // Call the appropriate response handler

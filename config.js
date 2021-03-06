@@ -8,7 +8,8 @@ environments.staging = {
     httpsPort: 3001,
     sslKeyPath: './https/key.pem',
     sslCertPath: './https/cert.pem',
-  }
+  },
+  hashingSecret: 'weaksecret',
 };
 
 environments.production = {
@@ -18,7 +19,8 @@ environments.production = {
     httpsPort: 5001,
     sslKeyPath: './https/key.pem',
     sslCertPath: './https/cert.pem',
-  }
+  },
+  hashingSecret: 'superstrongsecret',
 };
 
 // Export the relevant environment config
