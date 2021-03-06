@@ -39,7 +39,8 @@ httpsServer.listen(config.server.httpsPort, () => {
 
 // Define a simple router to resolve to handlers
 const router = {
-  'test': handlers.test
+  'test': handlers.test,
+  'ping': handlers.ping,
 };
 
 // Configure how our server will respond to requests
@@ -73,7 +74,7 @@ const restHandler = function (request, response) {
     buffer += decoder.end();
 
    // Determine the appropriate request handler
-   const handler = typeof(handlers[trimmedPath]) !== 'undefined' ? handlers[trimmedPath] : handlers.notFound;
+   const handler = typeof(router[trimmedPath]) !== 'undefined' ? router[trimmedPath] : handlers.notFound;
 
    // Compose the data to pass to the handler
    const data = {
